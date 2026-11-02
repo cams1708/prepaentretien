@@ -240,9 +240,9 @@ export async function summarizeInterviewPrepSession(
   if (!parsed.success) {
     console.error(
       "[interview-prep] summary: tool input failed validation:",
-      JSON.stringify(parsed.error.flatten()),
-      "raw input:",
-      JSON.stringify(toolUse.input)
+      // Jamais le contenu lui-même : rien de la session ne doit être conservé,
+      // pas même dans les logs serveur.
+      Object.keys(parsed.error.flatten().fieldErrors).join(", ")
     );
     return null;
   }

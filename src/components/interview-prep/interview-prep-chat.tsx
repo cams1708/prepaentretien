@@ -1,31 +1,33 @@
 "use client";
 
 import { Loader2, Send, Square } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { endInterviewPrepSessionAction, sendInterviewPrepMessageAction } from "@/lib/actions/interview-prep";
+import { sendInterviewPrepMessageAction, type StudentContext } from "@/lib/actions/interview-prep";
 import { PRE_INTERVIEW_CHECKLIST_MESSAGE } from "@/lib/ai/interview-prep-checklist";
 import { cn } from "@/lib/utils";
 
-type Message = { role: "user" | "assistant"; content: string };
+import type { Message } from "./types";
 
 export function InterviewPrepChat({
-  conversationId,
-  initialMessages,
+  messages,
+  setMessages,
+  student,
+  ending,
+  onEnd,
 }: {
-  conversationId: string;
-  initialMessages: Message[];
+  messages: Message[];
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+  student: StudentContext;
+  ending: boolean;
+  onEnd: () => void;
 }) {
-  const router = useRouter();
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [sending, startSending] = useTransition();
-  const [ending, startEnding] = useTransition();
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -38,27 +40,24 @@ export function InterviewPrepChat({
     const content = input.trim();
     if (!content || sending) return;
 
-    setMessages((prev) => [...prev, { role: "user", content }]);
+    const previous = messages;
+    setMessages([...previous, { role: "user", content }]);
     setInput("");
 
     startSending(async () => {
-      const result = await sendInterviewPrepMessageAction(conversationId, content);
+      const result = await sendInterviewPrepMessageAction(previous, content, student);
       if (result.success) {
         setMessages((prev) => [
           ...prev,
           ...result.replies.map((reply): Message => ({ role: "assistant", content: reply })),
         ]);
       } else {
+        // Rien n'est stocké côté serveur : on retire le message non traité
+        // et on le remet dans la zone de saisie pour pouvoir le renvoyer.
+        setMessages(previous);
+        setInput(content);
         toast.error(result.error);
       }
-    });
-  }
-
-  function handleEnd() {
-    startEnding(async () => {
-      await endInterviewPrepSessionAction(conversationId);
-      toast.success("Session terminée — tu peux en démarrer une nouvelle quand tu veux.");
-      router.refresh();
     });
   }
 
@@ -133,7 +132,7 @@ export function InterviewPrepChat({
             }}
             placeholder="Écris ta réponse..."
             rows={2}
-            disabled={sending}
+            disabled={sending || ending}
             className="flex-1"
           />
           <Button type="button" size="icon" onClick={handleSend} disabled={sending || !input.trim()}>
@@ -152,8 +151,8 @@ export function InterviewPrepChat({
           type="button"
           variant="outline"
           size="sm"
-          disabled={ending || userTurns === 0}
-          onClick={handleEnd}
+          disabled={ending || sending || userTurns === 0}
+          onClick={onEnd}
         >
           {ending ? <Loader2 className="size-4 animate-spin" /> : <Square className="size-4" />}
           Terminer la session

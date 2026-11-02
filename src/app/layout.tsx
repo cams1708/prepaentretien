@@ -23,6 +23,8 @@ export const metadata: Metadata = {
   },
   description:
     "Le coach IA de l'ECM qui prépare les étudiant·e·s en alternance à leurs entretiens : simulation réaliste, retours après chaque réponse et compte rendu de session.",
+  // Outil interne : pas d'indexation par les moteurs de recherche.
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({

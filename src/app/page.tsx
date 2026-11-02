@@ -1,40 +1,44 @@
-import { Mic } from "lucide-react";
-import Link from "next/link";
+import { ShieldCheck } from "lucide-react";
+import type { Metadata } from "next";
 
+import { InterviewPrepApp } from "@/components/interview-prep/interview-prep-app";
 import { Logo } from "@/components/shared/logo";
-import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 
-// Les utilisateurs connectés sont redirigés par le middleware vers leur
-// espace (étudiant·e : /dashboard/entretien, CREE : /staff).
-export default function HomePage() {
+export const metadata: Metadata = { title: "Prépa entretien" };
+// Les Server Actions appelées depuis cette page interrogent l'API Claude et
+// peuvent prendre quelques secondes — sans ça, Vercel Hobby coupe la fonction
+// à 10 s par défaut.
+export const maxDuration = 60;
+
+export default function InterviewPrepPage() {
   return (
     <div className="flex min-h-svh flex-col">
-      <header className="flex h-16 items-center justify-between px-6">
+      <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border/60 bg-background/80 px-4 shadow-soft backdrop-blur-md sm:px-6">
         <Logo />
-        <Button asChild variant="ghost" size="sm">
-          <Link href="/login">Connexion</Link>
-        </Button>
+        <div className="ml-auto">
+          <ThemeToggle />
+        </div>
       </header>
-      <main className="flex flex-1 items-center justify-center px-6">
-        <div className="max-w-2xl space-y-6 text-center">
-          <span className="mx-auto flex size-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <Mic className="size-6" />
-          </span>
-          <h1 className="text-4xl font-semibold tracking-tight text-balance">
-            Prépare ton entretien d&apos;alternance avec le coach IA de l&apos;ECM
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Indique le poste visé, réponds aux questions d&apos;un·e recruteur·se RH, reçois un retour
-            concret après chaque réponse et un compte rendu complet à la fin de la session.
-          </p>
-          <div className="flex flex-wrap justify-center gap-3">
-            <Button asChild size="lg">
-              <Link href="/register">Créer mon compte</Link>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <Link href="/login">Se connecter</Link>
-            </Button>
+
+      <main className="relative flex-1 p-4 sm:p-6 lg:p-8">
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[420px] bg-[radial-gradient(ellipse_at_top,var(--brand-50),transparent_65%)] dark:bg-[radial-gradient(ellipse_at_top,var(--brand-800),transparent_65%)] dark:opacity-30"
+          aria-hidden
+        />
+        <div className="mx-auto max-w-6xl space-y-6">
+          <div className="mx-auto max-w-3xl">
+            <h1 className="text-2xl font-semibold tracking-tight">Prépa entretien</h1>
+            <p className="text-muted-foreground">
+              Simule un entretien avec le coach IA : décris le poste visé, réponds à ses questions, et
+              reçois des retours pour t&apos;améliorer. À la fin, télécharge ton compte rendu en PDF.
+            </p>
+            <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+              <ShieldCheck className="size-4 shrink-0 text-emerald-600" />
+              Aucun compte, aucun stockage : la session est effacée dès que tu quittes la page.
+            </p>
           </div>
+          <InterviewPrepApp />
         </div>
       </main>
     </div>

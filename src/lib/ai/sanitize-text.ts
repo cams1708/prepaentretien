@@ -36,17 +36,14 @@ export function sanitizeAiText<T extends string | null | undefined>(text: T): T 
 
   STRAY_SCRIPT_RE.lastIndex = 0;
   if (STRAY_SCRIPT_RE.test(cleaned)) {
-    const before = cleaned;
     cleaned = cleaned
       .replace(STRAY_SCRIPT_RE, " ")
       .replace(/\s{2,}/g, " ")
       .replace(/\s+([,.;:!?])/g, "$1")
       .trim();
 
-    console.warn("[ai] caractères non-français détectés et retirés d'un texte généré:", {
-      before,
-      after: cleaned,
-    });
+    // Pas de contenu dans le log : aucune donnée de session n'est conservée.
+    console.warn("[ai] caractères non-français détectés et retirés d'un texte généré.");
   }
 
   return cleaned as T;
